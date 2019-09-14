@@ -65,19 +65,19 @@ def save_html():
     output_dir = get_output_dir()
     images = []
 
-    for path in sorted(os.listdir(output_dir)):
-        if path == 'graphs.html':
+    for filename in sorted(os.listdir(output_dir)):
+        if filename == 'graphs.html':
             continue
 
-        title = os.path.splitext(path)[0].replace('_', ' ')
+        title = os.path.splitext(filename)[0].replace('_', ' ')
 
         images.append(
-            image_template.format(title=title, path=path)
+            image_template.format(title=title, path=os.path.join('report', filename))
         )
 
     output_html = html_template.format(body=''.join(images))
 
-    with open(os.path.join(output_dir, 'graphs.html'), 'w') as fp:
+    with open(os.path.join(output_dir, '..', 'index.html'), 'w') as fp:
         fp.write(output_html)
 
 
@@ -98,8 +98,8 @@ def main(diagnostic, performance, task):
     # for index, plt in enumerate(graph.avg_perf(df=df_performance, show=False)):
     #     save(plt, index)
 
-    for index, plt in enumerate(graph.grid_perf_all(df=df_performance, show=False)):
-        save(plt, index)
+    # for index, plt in enumerate(graph.grid_perf_all(df=df_performance, show=False)):
+    #     save(plt, index)
 
     # embed graphs in html
     save_html()
