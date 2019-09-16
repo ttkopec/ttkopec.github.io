@@ -1,6 +1,8 @@
 import os
 from argparse import ArgumentParser
 
+import matplotlib.pyplot as plt
+
 import graph
 
 html_template = '''
@@ -45,18 +47,19 @@ def get_output_dir():
         os.mkdir(output_dir)
 
     return output_dir
-import matplotlib.pyplot as plt
+
 
 def save(fig, index=None):
     output_dir = get_output_dir()
-    filename = '{}_{}'.format(fig._suptitle.get_text(), index) if index else fig._suptitle.get_text()
-    filename = filename.replace(' ', '_')
+
+    title = fig._suptitle.get_text() if hasattr(fig, '_suptitle', ) else fig.gca().get_title()
+
+    filename = '{}_{}'.format(title, index) if index else title
+    filename = filename.replace(' ', '_').replace('.', '_')
 
     fig.savefig(os.path.join(output_dir, filename))
 
     plt.close()
-
-
 
     print('Saved {}'.format(filename))
 
@@ -88,18 +91,17 @@ def main(diagnostic, performance, task):
     df_performance = graph.load_performance(performance, read_line(performance).split(','))
 
     # generate graphs
-    # save(graph.gannt(df=df_task, color=color, show=False, limit=30))
-    # save(graph.gannt_traces(df=df_task, show=False, limit=30))
-    # save(graph.mean_tasks_duration(df=df_task, show=False))
-    # save(graph.box_mean(df=df_task, show=False))
-    # save(graph.concurrent_tasks(df=df_task, show=False))
-    # save(graph.concurrent_tasks_with_waiting(df=df_task, df1=df_diagnostic, show=False))
-    # save(graph.grid_perf(df=df_performance, show=False))
-    # for index, plt in enumerate(graph.avg_perf(df=df_performance, show=False)):
-    #     save(plt, index)
+    save(graph.gannt(df=df_task, color=color, show=False, limit=30))
+    save(graph.gannt_traces(df=df_task, show=False, limit=30))
+    save(graph.mean_tasks_duration(df=df_task, show=False))
+    save(graph.box_mean(df=df_task, show=False))
+    save(graph.concurrent_tasks(df=df_task, show=False))
+    save(graph.concurrent_tasks_with_waiting(df=df_task, df1=df_diagnostic, show=False))
+    for index, plt in enumerate(graph.avg_perf(df=df_performance, show=False)):
+        save(plt, index)
 
-    # for index, plt in enumerate(graph.grid_perf_all(df=df_performance, show=False)):
-    #     save(plt, index)
+    for index, plt in enumerate(graph.grid_perf_all(df=df_performance, show=False)):
+        save(plt, index)
 
     # embed graphs in html
     save_html()

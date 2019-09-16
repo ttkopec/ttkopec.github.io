@@ -15,6 +15,7 @@ def load_task(f, names):
     df['Diff'] = df.end - df.start
     df.sort_values('start', inplace=True)
 
+    # montage colors
     color = {'mDiffFit': 'turquoise', 'mProjectPP': 'crimson', 'mConcatFit': 'green', 'mBackground': 'blue',
              'mJPEG': 'yellow', 'mShrink': 'brown', 'mAdd': 'orange', 'mBgModel': 'black', 'mImgtbl': 'violet',
              'kinc-wrapper': 'red'}
@@ -188,9 +189,6 @@ def box_mean(f=None, names=None, df=None, show=True):
 
     allTasks = df.taskID.unique()
 
-    montage_ignore = {'mBgModel', 'mImgtbl', 'mConcatFit'}
-    allTasks = set(allTasks) - montage_ignore
-
     y_length = len(allTasks) // 2 + 1
     fig, axs = plt.subplots(2, y_length)
 
@@ -210,18 +208,17 @@ def box_mean(f=None, names=None, df=None, show=True):
     if len(allTasks) % 2 != 0:
         fig.delaxes(axs[-1, -1])
 
-    plt.subplots_adjust(wspace=0.3)
-    plt.suptitle('Czasy wykonania zadań')
+    fig.subplots_adjust(wspace=0.3)
+    fig.suptitle('Czasy wykonania zadań')
 
     if show:
         plt.show()
     else:
-        return plt
+        return fig
 
 
 def concurrent_tasks(f=None, names=None, df=None, show=True):
     plt.clf()
-    plt.rcParams.update({'font.size': 20})
 
     if df is None:
         df, color = load_task(f, names)
@@ -235,9 +232,6 @@ def concurrent_tasks(f=None, names=None, df=None, show=True):
 
     start = df.iloc[0].start
     end = df.iloc[-1].start
-
-    print('total exec time [m]:')
-    print((end - start) / 60)
 
     data = []
 
@@ -285,7 +279,6 @@ def avg_perf(f=None, names=None, df=None, show=True):
         plt.xlabel('Task type')
         plt.title('Mean {} per task type'.format(metric))
 
-        # plt.xlim(left=1)
         plt.xticks(range(0, len(taskIDs)), taskIDs)
 
         if show:
@@ -307,11 +300,8 @@ def concurrent_tasks_with_waiting(f=None, names=None, f1=None, names1=None, df=N
     start = df.iloc[0].start
     end = df.iloc[-1].start
 
-    print('total exec time [m]:')
-    print((end - start) / 60)
-
-    data = []
-    data1 = []
+    executed = []
+    waiting = []
 
     while start < end:
         _end = start + window
@@ -324,21 +314,20 @@ def concurrent_tasks_with_waiting(f=None, names=None, f1=None, names1=None, df=N
         except:
             avg_waiting_tasks = 0
 
-        data.append(concurrent)
-        data1.append(-avg_waiting_tasks)
+        executed.append(concurrent)
+        waiting.append(-avg_waiting_tasks)
 
         start += window
         N += 1
 
     ind = list(range(N))  # the x locations for the groups
 
-    p1 = plt.bar(ind, data)
-    p2 = plt.bar(ind, data1)
+    p1 = plt.bar(ind, executed)
+    p2 = plt.bar(ind, waiting)
     plt.legend((p1[0], p2[0]), ('Wykonywane', 'Oczekujące'))
 
     plt.ylabel('Ilość zadań')
     plt.title('Wykonywane i oczekujące zadania w {}-sekundowych interwałach'.format(window))
-    # plt.title('Wykonywane i oczekujące zadania dla limitu {} MB'.format(limit))
 
     plt.xticks(range(0, N, 2), range(0, int(end - df.iloc[0].start), window * 2))
 
@@ -400,20 +389,17 @@ def grid_perf_all(f=None, names=None, experiment=None, df=None, show=True):
 
     taskIDs = df.taskID.unique()
 
-    # TODO remove
-    # taskIDs = ('mProjectPP',)
-    #
-
-    metrics = ['cpu_usage', 'mem_usage', 'conn_recv', 'conn_transferred', 'disk_read', 'disk_write']\
-    [1:]
+    metrics = ['cpu_usage', 'mem_usage', 'conn_recv', 'conn_transferred', 'disk_read', 'disk_write']
 
     aa = df[(df.experiment == experiment)] if experiment else df
+
+    c = {'mProjectPP': 307, 'mDiffFit': 862}
 
     for task in taskIDs:
         samples = aa[(aa.taskID == task)]
         samples_count = min(len(samples), 100)
         columns = rows = math.ceil(math.sqrt(samples_count))
-        ids = samples.containerID.unique()
+        ids = samples.containerID.unique()[:c[task]]
 
         for metric in metrics:
 
@@ -442,10 +428,7 @@ def grid_perf_all(f=None, names=None, experiment=None, df=None, show=True):
 
 
 if __name__ == '__main__':
-    pass
-    list(
-        grid_perf_all(
-            '/home/tkopec/PycharmProjects/hyperflow-report/datasets/montage20-Fargate/256-512/hflow_performance_06_07.csv',
-            'name,tags,time,configId,conn_recv,conn_transferred,containerID,cpu_usage,disk_read,disk_write,experiment,mem_usage,taskID'.split(
-                ','))
-    )
+    box_mean(
+        'example-dataset/hflow_task.csv',
+        'name,tags,time,configId,containerID,download_end,download_start,end,execute_end,execute_start,experiment,'
+        'start,taskID,upload_end,upload_start'.split(','))
