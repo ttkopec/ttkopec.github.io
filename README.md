@@ -15,7 +15,7 @@ Project consists of following files:
 
 * [graph.py](graph.py) - graphing script, allows for graph generation. Example usage:
     * Edit `graph.py` and add invocation of graph function, for example:
-    <br/>    
+      
     ```python
     if __name__ == '__main__':
         box_mean(
@@ -25,7 +25,7 @@ Project consists of following files:
     ```
   
     * Run script
-    <br/>    
+    
     ```bash
       python3 graph.py
     ```
